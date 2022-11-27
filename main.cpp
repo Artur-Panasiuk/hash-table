@@ -1,7 +1,6 @@
 #include <iostream>
 #include <time.h>
 #include <string.h>
-#include <list>
 
 using namespace std;
 
@@ -11,22 +10,14 @@ class hash_table{
         K key;
         V value;
     };
-    int hashFunction;
     int currSize {0};
     int maxSize {1024};
+    int buffSize {1024};
     int arraySizeMultipl {2};
     float expandThreshold {0.75};
-    list<list<node>>* ht;
-public:
-    void expand(){
-        int newMaxSize = maxSize * arraySizeMultipl;
-        list<list<node>> temp[newMaxSize];
-        for(int i = 0; i < maxSize; i++){
-            temp[i] = ht[i];
-        }
-        maxSize = newMaxSize;
-        *ht = *temp;
-    }
+
+    node** ht;
+
     int getHashKey(K key){
         int hashedKey = 0;
         if(typeid(key) == typeid(string)){
@@ -36,20 +27,48 @@ public:
         }
         return hashedKey;
     }
+    void expand(){
+        int newMaxSize = maxSize * arraySizeMultipl;
+
+        node** tempHt = new node*[newMaxSize];
+        for(int i = 0; i < newMaxSize; i++){
+            tempHt[i] = new node[buffSize];
+        }
+        for(int j = 0; j < maxSize; j++){
+            for(int k = 0; k < buffSize; k++){
+                tempHt[j][k] = ht[j][k];
+            }
+        }
+        for(int l = 0; l < maxSize; l++){
+            delete[] ht[l];
+        }
+        delete[] ht;
+
+        ht = tempHt;
+
+        maxSize = newMaxSize;
+    }
 public:
     hash_table(){
-        ht = new list<list<node>>[maxSize];
+        ht = new node*[maxSize];
+        for(int i = 0; i < maxSize; i++){
+            ht[i] = new node[buffSize];
+        }
     }
     ~hash_table(){
+        for(int i = 0; i < maxSize; i++){
+            delete[] ht[i];
+        }
         delete[] ht;
     }
+
     void add(K key, V value){
-        int hashKey = getHashKey(key);
-        if(hashKey < maxSize * expandThreshold){
+        int hashedKey = getHashKey(key);
+        if(hashedKey < maxSize * expandThreshold){
             node newNode;
             newNode.key = key;
             newNode.value = value;
-            ht[hashKey].push_back(newNode);
+            ht[hashedKey][0] = newNode;
             currSize++;
         }else{
             expand();
@@ -57,28 +76,23 @@ public:
         }
     }
     V get(K key){
-        int hashKey = getHashKey(key);
-        V returnValue = NULL;
+        int hashedKey = getHashKey(key);
 
-        if(ht[hashKey]){
-            for(auto i = ht[hashKey].begin(); i != ht[hashKey].end(); ++i){
-                if(*i.key = key) returnValue = *i.value;
+        for(int i = 0; i < buffSize; i++){
+            if(ht[hashedKey][i].key == key){
+                return ht[hashedKey][i].value;
             }
         }
-
-        return returnValue;
     }
     bool del(K key){
         bool returnValue = false;
-        int hashKey = getHashKey(key);
+        int hashedKey = getHashKey(key);
 
-        if(ht[hashKey]){
-            for(auto i = ht[hashKey].begin(); i != ht[hashKey].end(); ++i){
-                if(*i.key = key){
-                    *i = nullptr;
-                    currSize--;
-                    returnValue = true;
-                }
+        for(int i = 0; i < buffSize; i++){
+            if(ht[hashedKey][i].key == key){
+                node temp;
+                ht[hashedKey][i] = temp;
+                returnValue = true;
             }
         }
 
@@ -87,58 +101,23 @@ public:
     void clearAll(bool isValuePOD){
         if(isValuePOD){
             for(int i = 0; i < maxSize; i++){
-                ht[i] = NULL;
+                delete[] ht[i];
+                ht[i] = new node[buffSize];
             }
         }
     }
-    string to_string(bool isKeyPOD, bool isValuePOD){
-        string header = sizeInfo();
-        string body = firstTenList(isKeyPOD, isValuePOD);
-        string footer = tableStats();
-        string raport = header + "\n" + body + "\n" + footer;
-        return raport;
-    }
-    string sizeInfo(){
-        string header = "hash table:";
-        string usedSize = "current_size: " + currSize;
-        string maxS = "max_size: " + maxSize;
-        return header + "\n\t" + usedSize + "\n\t" + maxS;
-    }
-    string firstTenList(bool isKeyPOD, bool isValuePOD){
-        string header = "\ttable\n\t{\n";
-        string body = "";
-        int counter = 0;
-        for(int i = 0; i < maxSize; i++){
-            if(ht[i]){
-                for(auto j = ht[i].begin(); j != ht[i].end(); ++j){
-                    string keyRef = (string)*j.key;
-                    string valRef = (string)*j.value;
-                    cout << keyRef << endl;
-                    cout << valRef << endl;
-                    //body += "\t\t" + i + ": " + keyRef + " -> " + valRef + ";\n";
-                    counter++;
-                }
-            }
-            if(counter < 10) break;
-        }
-        body += "}";
-        return header + body;
-    }
-    string tableStats(){
-        return "";
-    }
+
 };
-
-void time_test(int loopSize){
-
-}
-
 
 int main()
 {
     hash_table<string, string> test;
 
-    test.add("testKey", "testValue");
+    test.add("!", "val");
+    test.add("@", "lol");
+    test.add("Adam", "lol");
+
+    test.get("Adam");
 
     return 0;
 }
