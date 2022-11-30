@@ -4,92 +4,103 @@
 
 using namespace std;
 
-template <class K, class V>
-class hash_table{
-    struct node{
-        K key;
+template <class V>
+class hash_table {
+public:
+    struct node {
+        string key;
         V value;
     };
-    int currSize {0};
-    int maxSize {1024};
-    int buffSize {1024};
-    int arraySizeMultipl {2};
-    float expandThreshold {0.75};
+    int currSize{ 0 };
+    int maxSize{ 1024 };
+    int buffSize{ 10 };
+    int arraySizeMultipl{ 2 };
+    float expandThreshold{ 0.75 };
 
     node** ht;
 
-    int getHashKey(K key){
-        int hashedKey = 0;
-        if(typeid(key) == typeid(string)){
-            for(long long unsigned i = 0; i < key.length(); i++){
-                hashedKey += key[i]*(31^(key.length()-(i+1)));
+    int getHashKey(string key) {
+        long long int hashedKey = 0;
+        if (typeid(key) == typeid(string)) {
+            for (long long unsigned i = 0; i < key.length(); i++) {
+                hashedKey += key[i] * (31 ^ (key.length() - (i + 1)));
             }
         }
+
+        hashedKey %= maxSize;
+
         return hashedKey;
     }
-    void expand(){
+    void expand() {
         int newMaxSize = maxSize * arraySizeMultipl;
 
-        node** tempHt = new node*[newMaxSize];
-        for(int i = 0; i < newMaxSize; i++){
+        node** tempHt = new node * [newMaxSize];
+
+        for (int i = 0; i < newMaxSize; i++) {
             tempHt[i] = new node[buffSize];
         }
-        for(int j = 0; j < maxSize; j++){
-            for(int k = 0; k < buffSize; k++){
+        for (int j = 0; j < maxSize; j++) {
+            for (int k = 0; k < buffSize; k++) {
                 tempHt[j][k] = ht[j][k];
             }
         }
-        for(int l = 0; l < maxSize; l++){
+        for (int l = 0; l < maxSize; l++) {
             delete[] ht[l];
         }
         delete[] ht;
 
-        ht = tempHt;
-
         maxSize = newMaxSize;
+
+        ht = tempHt;
     }
-public:
-    hash_table(){
-        ht = new node*[maxSize];
-        for(int i = 0; i < maxSize; i++){
+    hash_table() {
+        ht = new node * [maxSize];
+        node temp;
+        for (int i = 0; i < maxSize; i++) {
             ht[i] = new node[buffSize];
+            for (int j = 0; j < buffSize; j++) {
+                ht[i][j] = temp;
+            }
         }
     }
-    ~hash_table(){
-        for(int i = 0; i < maxSize; i++){
+    ~hash_table() {
+        for (int i = 0; i < maxSize; i++) {
             delete[] ht[i];
         }
         delete[] ht;
     }
 
-    void add(K key, V value){
+    void add(string key, V value) {
         int hashedKey = getHashKey(key);
-        if(hashedKey < maxSize * expandThreshold){
+        if (hashedKey < maxSize * expandThreshold) {
             node newNode;
             newNode.key = key;
             newNode.value = value;
             ht[hashedKey][0] = newNode;
             currSize++;
-        }else{
+        }
+        else {
             expand();
             add(key, value);
         }
     }
-    V get(K key){
+    string get(string key) {
         int hashedKey = getHashKey(key);
+        string retVal = "";
 
-        for(int i = 0; i < buffSize; i++){
-            if(ht[hashedKey][i].key == key){
-                return ht[hashedKey][i].value;
+        for (int i = 0; i < buffSize; i++) {
+            if (ht[hashedKey][i].key == key) {
+                retVal = ht[hashedKey][i].value;
             }
         }
+        return retVal;
     }
-    bool del(K key){
+    bool del(string key) {
         bool returnValue = false;
         int hashedKey = getHashKey(key);
 
-        for(int i = 0; i < buffSize; i++){
-            if(ht[hashedKey][i].key == key){
+        for (int i = 0; i < buffSize; i++) {
+            if (ht[hashedKey][i].key == key) {
                 node temp;
                 ht[hashedKey][i] = temp;
                 returnValue = true;
@@ -98,9 +109,9 @@ public:
 
         return returnValue;
     }
-    void clearAll(bool isValuePOD){
-        if(isValuePOD){
-            for(int i = 0; i < maxSize; i++){
+    void clearAll(bool isValuePOD) {
+        if (isValuePOD) {
+            for (int i = 0; i < maxSize; i++) {
                 delete[] ht[i];
                 ht[i] = new node[buffSize];
             }
@@ -111,13 +122,11 @@ public:
 
 int main()
 {
-    hash_table<string, string> test;
+    hash_table<string> test;
 
-    test.add("!", "val");
-    test.add("@", "lol");
-    test.add("Adam", "lol");
+    test.add("a", "b");
 
-    test.get("Adam");
+    cout<< test.get("a");
 
     return 0;
 }
