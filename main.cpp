@@ -82,11 +82,13 @@ public:
 
     void add(string key, V value) {
         int hashedKey = getHashKey(key);
+        int subListSize = sizeof(ht[hashedKey])/sizeof(ht[hashedKey][0]);
         if (hashedKey < maxSize * expandThreshold) {
             node newNode;
             newNode.key = key;
             newNode.value = value;
-            ht[hashedKey][0] = newNode;
+            lesserExpand(hashedKey);
+            ht[hashedKey][subListSize + 1] = newNode;
             currSize++;
         }
         else {
@@ -132,7 +134,7 @@ public:
         string body = "hash table\n\t";
         body += "current size: " + to_string(currSize) + "\n\t";
         body += "max size: " + to_string(maxSize) + "\n\t";
-
+/*
         if(isValuePOD){
             for(int i = 0; i < 10 && i < currSize; i++){
                 if(ht[i].Size() > 0){
@@ -143,6 +145,7 @@ public:
                 }
             }
         }
+        */
 
         return body;
     }
