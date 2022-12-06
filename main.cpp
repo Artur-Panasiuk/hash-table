@@ -13,7 +13,7 @@ public:
     };
     int currSize{ 0 };
     int maxSize{ 1024 };
-    int buffSize{ 10 };
+    int buffSize{ 2 };
     int arraySizeMultipl{ 2 };
     float expandThreshold{ 0.75 };
 
@@ -31,6 +31,20 @@ public:
 
         return hashedKey;
     }
+    void lesserExpand(int index){
+        int indexSize = sizeof(ht[index])/sizeof(ht[index][0]);
+        int newMaxSize = indexSize + 1;
+
+        node* temp = new node[newMaxSize];
+
+        for(int i = 0; i < indexSize; i++){
+            temp[i] = ht[index][i];
+        }
+        delete[] ht[index];
+
+        ht[index] = temp;
+    }
+
     void expand() {
         int newMaxSize = maxSize * arraySizeMultipl;
 
@@ -55,12 +69,8 @@ public:
     }
     hash_table() {
         ht = new node * [maxSize];
-        node temp;
         for (int i = 0; i < maxSize; i++) {
             ht[i] = new node[buffSize];
-            for (int j = 0; j < buffSize; j++) {
-                ht[i][j] = temp;
-            }
         }
     }
     ~hash_table() {
@@ -118,7 +128,28 @@ public:
         }
     }
 
+    string toString(bool isValuePOD){
+        string body = "hash table\n\t";
+        body += "current size: " + to_string(currSize) + "\n\t";
+        body += "max size: " + to_string(maxSize) + "\n\t";
+
+        if(isValuePOD){
+            for(int i = 0; i < 10 && i < currSize; i++){
+                if(ht[i].Size() > 0){
+                    for(int j = 0; j < ht[i].Size(); j++){
+                        body += ht[i][j].key;
+                        body += " -> ";
+                    }
+                }
+            }
+        }
+
+        return body;
+    }
+
 };
+
+
 
 int main()
 {
@@ -126,7 +157,7 @@ int main()
 
     test.add("a", "b");
 
-    cout<< test.get("a");
+    cout<<test.toString(false);
 
     return 0;
 }
