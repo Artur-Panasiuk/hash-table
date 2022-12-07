@@ -1,6 +1,7 @@
 #include <iostream>
 #include <time.h>
 #include <string.h>
+#include <string>
 
 using namespace std;
 
@@ -31,13 +32,12 @@ public:
 
         return hashedKey;
     }
-    void lesserExpand(int index){
-        int indexSize = sizeof(ht[index])/sizeof(ht[index][0]);
+    void lesserExpand(int index, int indexSize) {
         int newMaxSize = indexSize + 1;
 
         node* temp = new node[newMaxSize];
 
-        for(int i = 0; i < indexSize; i++){
+        for (int i = 0; i < indexSize; i++) {
             temp[i] = ht[index][i];
         }
         delete[] ht[index];
@@ -82,13 +82,16 @@ public:
 
     void add(string key, V value) {
         int hashedKey = getHashKey(key);
-        int subListSize = sizeof(ht[hashedKey])/sizeof(ht[hashedKey][0]);
+        int subListSize = sizeof(ht[hashedKey]) / sizeof(ht[hashedKey][0]);
         if (hashedKey < maxSize * expandThreshold) {
             node newNode;
             newNode.key = key;
             newNode.value = value;
-            lesserExpand(hashedKey);
-            ht[hashedKey][subListSize + 1] = newNode;
+            if (ht[hashedKey][0].key != "") {
+                lesserExpand(hashedKey, subListSize);
+                subListSize++;
+            }
+            ht[hashedKey][subListSize] = newNode;
             currSize++;
         }
         else {
@@ -96,9 +99,9 @@ public:
             add(key, value);
         }
     }
-    string get(string key) {
+    V get(string key) {
         int hashedKey = getHashKey(key);
-        string retVal = "";
+        V retVal;
 
         for (int i = 0; i < buffSize; i++) {
             if (ht[hashedKey][i].key == key) {
@@ -129,38 +132,66 @@ public:
             }
         }
     }
-
-    string toString(bool isValuePOD){
+    string toString(bool isValuePOD) {
         string body = "hash table\n\t";
         body += "current size: " + to_string(currSize) + "\n\t";
         body += "max size: " + to_string(maxSize) + "\n\t";
-/*
-        if(isValuePOD){
-            for(int i = 0; i < 10 && i < currSize; i++){
-                if(ht[i].Size() > 0){
-                    for(int j = 0; j < ht[i].Size(); j++){
-                        body += ht[i][j].key;
-                        body += " -> ";
+        
+                if(isValuePOD){
+                    for(int i = 0; i < 10 && i < currSize; i++){
+                        if((sizeof(ht[i]) / sizeof(ht[i][0])) > 0){
+                            for(int j = 0; j < (sizeof(ht[i]) / sizeof(ht[i][0])); j++){
+                                body += ht[i][j].key;
+                                body += " -> ";
+                            }
+                        }
                     }
                 }
-            }
-        }
-        */
+                
 
         return body;
     }
-
 };
+
+string random_key(int n) {
+    string key;
+    char letters[6] = { 'a','b', 'c', 'd', 'e', 'f', };
+    key.reserve(n);
+
+    for (int i = 0; i < n; i++) {
+        key += letters[rand() % 6];
+    }
+    return key;
+}
 
 
 
 int main()
 {
-    hash_table<string> test;
-
-    test.add("a", "b");
-
-    cout<<test.toString(false);
-
+        const int MAX_ORDER = 7; // maksymalny rzad wielkosci dodawanych danych
+        hash_table < int >* ht = new hash_table < int >();
+        for (int o = 1; o <= MAX_ORDER; o++)
+        {
+            const int n = pow(10, o); // rozmiar danych
+            // dodawanie do tablicy mieszajacej
+            clock_t t1 = clock();
+                for (int i = 0; i < n; i++)
+                    ht->add(random_key(6), i); // klucze losowe 6 - znakowe , a jako wartosci indeks petli
+            clock_t t2 = clock();
+                const int m = pow(10, 4);
+            int hits = 0;
+            t1 = clock();
+            for (int i = 0; i < m; i++)
+            {
+                auto entry = ht->get(random_key(6)); // wyszukiwanie wg losowego klucza
+                if (entry != NULL)
+                    hits++;
+            }
+            t2 = clock();
+                ht-> toString(false);
+            ht->clearAll(false); // czyszczenie tablicy mieszajacej
+        }
+    delete ht;
     return 0;
 }
+
