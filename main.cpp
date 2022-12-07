@@ -1,6 +1,3 @@
-#include <iostream>
-#include <time.h>
-#include <string.h>
 #include <string>
 
 using namespace std;
@@ -82,16 +79,11 @@ public:
 
     void add(string key, V value) {
         int hashedKey = getHashKey(key);
-        int subListSize = sizeof(ht[hashedKey]) / sizeof(ht[hashedKey][0]);
         if (hashedKey < maxSize * expandThreshold) {
             node newNode;
             newNode.key = key;
             newNode.value = value;
-            if (ht[hashedKey][0].key != "") {
-                lesserExpand(hashedKey, subListSize);
-                subListSize++;
-            }
-            ht[hashedKey][subListSize] = newNode;
+            ht[hashedKey][0] = newNode;
             currSize++;
         }
         else {
@@ -101,7 +93,7 @@ public:
     }
     V get(string key) {
         int hashedKey = getHashKey(key);
-        V retVal;
+        V retVal = NULL;
 
         for (int i = 0; i < buffSize; i++) {
             if (ht[hashedKey][i].key == key) {
@@ -143,6 +135,8 @@ public:
                             for(int j = 0; j < (sizeof(ht[i]) / sizeof(ht[i][0])); j++){
                                 body += ht[i][j].key;
                                 body += " -> ";
+                                body += ht[i][j].value;
+                                body += "\n";
                             }
                         }
                     }
@@ -188,10 +182,9 @@ int main()
                     hits++;
             }
             t2 = clock();
-                ht-> toString(false);
+            ht-> toString(false);
             ht->clearAll(false); // czyszczenie tablicy mieszajacej
         }
     delete ht;
     return 0;
 }
-
